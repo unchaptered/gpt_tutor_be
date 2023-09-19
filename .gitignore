@@ -1,3 +1,7 @@
+# BASIC
 db.sqlite3
-
 __pycache__
+
+# KEY, SECRET
+*.yml
+*.env
