@@ -15,19 +15,31 @@ class TalkController(BaseController):
 
     def get(self, request: HttpRequest):
         print('TalkController : ' + request.path)
+        
+        body = self._getRequestBody(request.body)
+        chatUuid = request.GET['chatUuid']
+        talkUuid = request.GET['talkUuid']
+        self.__talkService.getTalk(chatUuid=chatUuid,
+                                   talkUuid=talkUuid)
 
         return self._getJsonResponse({
             'isSuccess': True
         })
 
     def post(self, request: HttpRequest):
+        print('TalkController : ' + request.path)
 
         body = self._getRequestBody(request.body)
-        gptAnswer = self.__talkService.sendQuestion(body['context'])
+        chatUuid = body['chatUuid']
+        context = body['context']
+        
+        self.__talkService.postTalk(chatUuid=chatUuid,
+                                                context=context)
+        # gptAnswer = self.__talkService.sendQuestion(chatUuid=chatUuid,
+        #                                             context=context)
 
         return self._getJsonResponse({
-            'isSuccess': True,
-            'gptAnswer': gptAnswer
+            'isSuccess': True
         })
 
     def patch(self, request: HttpRequest):

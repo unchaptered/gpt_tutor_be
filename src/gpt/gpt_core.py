@@ -6,21 +6,45 @@ import json
 
 from enum import Enum
 
-# Types
+# commons
 from common.enums.gpt.e_gpt_role import EGPT_ROLE
 from common.enums.gpt.e_gpt_instrucments import EGPT_INSTURMENTS
 from common.types.gpt.gpt_completion_type import GptCompletionResponseType
 
-# GPT
+# aws
+from aws.sqs_provider import SqsProvider
+
+# gpt
 from gpt.gpt_message import GptMessage, GptMessageList
 
-# Utility
+# utilities
 from utilities.config_provider import configProvider
+
+# layers
+from api.v1.chats.service.chat_service import ChatService
+from api.v1.talks.service.talk_service import TalkService
 
 openai.api_key = configProvider.getConfig()['OPENAI']['API_KEY']
 
-
 class GptCore():
+    
+    __sqsProvider: SqsProvider
+    
+    __chatService: ChatService
+    __talkService: TalkService
+    
+    def __init__(self) -> None:
+        self.__sqsProvider = SqsProvider()
+        
+        self.__chatService = ChatService()
+        self.__talkService = TalkService()
+    
+    def run(self):
+        message = self.__sqsProvider.getMessage('sampleGroup')
+        if message is None:
+            return print('현재 질문 대상이 존재하지 않습니다.')
+        
+        print(message['body'])
 
     def completion(
         self,

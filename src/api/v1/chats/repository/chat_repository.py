@@ -19,7 +19,7 @@ class ChatRepository():
             FROM chat
             WHERE host_key = '{hostKey}';
         """)
-        result: List[ChatPacketType] = cursor.fetchall()
+        result: List[ChatPacketType] = cursor.fetchall() # type: ignore
         return result
 
     def postChats(self,
@@ -46,7 +46,7 @@ class ChatRepository():
                        AND   chat_uuid = '{chatUuid}';
                        """)
 
-        result: Optional[ChatPacketType] = cursor.fetchall()
+        result: Optional[ChatPacketType] = cursor.fetchall() # type: ignore
         if result is None:
             raise ValueError('getChatByUuid result is none')
 
@@ -61,3 +61,6 @@ class ChatRepository():
                        WHERE host_key = '{hostKey}'
                        AND   chat_uuid = '{chatUuid}';
                        """)
+
+    # def getChatForGpt(self,
+    #                   )
