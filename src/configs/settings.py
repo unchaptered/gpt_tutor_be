@@ -26,13 +26,18 @@ SECRET_KEY = "django-insecure-u!uhy4mzb3&eg)j6+q!50vp@h^vb15!%7#ymcf$1esmv2&v6%=
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    'localhost'
+    'localhost',
+    'http://localhost',
+    '127.0.0.1',
+    'http://127.0.0.1',
 ]
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    'corsheaders',
+
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -42,6 +47,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
+
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -130,3 +137,16 @@ CSRF_COOKIE_SAMESITE = None
 
 # APPEND REDIRECT 비활성화
 # APPEND_SLASH = False
+
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_ORIGINS = [
+    'localhost',
+    'http://localhost',
+    'localhost:3000',
+    'http://localhost:3000',
+    '127.0.0.1:3000',
+    'http://127.0.0.1:3000',
+]
+CORS_ALLOW_HEADERS = [
+    'api-key', 'API-KEY', 'content-type', 'XSRF-TOKEN'
+]

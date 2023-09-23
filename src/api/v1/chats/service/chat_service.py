@@ -8,6 +8,7 @@ from utilities.date_provider import DateProvider
 # layers
 from api.v1.base.base_service import BaseService
 from api.v1.chats.repository.chat_repository import ChatRepository
+from api.v1.talks.repository.talk_repository import TalkRepository
 
 
 class ChatService(BaseService):
@@ -16,6 +17,7 @@ class ChatService(BaseService):
     __dateProvider: DateProvider
 
     __chatRepository: ChatRepository
+    __talkRepository: TalkRepository
 
     def __init__(self) -> None:
         super().__init__()
@@ -26,6 +28,7 @@ class ChatService(BaseService):
 
         # layers
         self.__chatRepository = ChatRepository()
+        self.__talkRepository = TalkRepository()
         
     # for layers
 
@@ -67,11 +70,15 @@ class ChatService(BaseService):
             chat = self.__chatRepository.getChatByUuid(cursor=cursor,
                                                        hostKey=hostKey,
                                                        chatUuid=chatUuid)
+            talkList = self.__talkRepository.getTalk(cursor=cursor,
+                                          chatUuid=chatUuid)
+            
+            self.__talkRepository.getTalkMetaDataForGPT
 
             cursor.close()
             conn.commit()
 
-            return chat
+            return talkList
 
     def delChatByUuid(self, hostKey: str, chatUuid: str):
 

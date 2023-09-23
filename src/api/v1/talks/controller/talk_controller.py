@@ -19,11 +19,12 @@ class TalkController(BaseController):
         body = self._getRequestBody(request.body)
         chatUuid = request.GET['chatUuid']
         talkUuid = request.GET['talkUuid']
-        self.__talkService.getTalk(chatUuid=chatUuid,
+        talk = self.__talkService.getTalk(chatUuid=chatUuid,
                                    talkUuid=talkUuid)
 
         return self._getJsonResponse({
-            'isSuccess': True
+            'isSuccess': True,
+            'talk': talk
         })
 
     def post(self, request: HttpRequest):

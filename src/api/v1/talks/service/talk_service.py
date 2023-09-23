@@ -59,12 +59,16 @@ class TalkService(BaseService):
         
         with self._rdsProvider.getConnection() as conn:
             cursor = conn.cursor(dictionary=True)
-            cursor.close()
-            self.__sqsProvider.getMessage(
-                groupId='sampleGroup'
-            )
+            talk = self.__talkRepository.getSingleTalk(cursor=cursor,
+                                                       chatUuid=chatUuid,
+                                                       talkUuid=talkUuid)
+            # self.__sqsProvider.getMessage(
+            #     groupId='sampleGroup'
+            # )
             
+            cursor.close()
             conn.commit()
+            return talk
     
     def postTalk(self,
                 chatUuid: str,

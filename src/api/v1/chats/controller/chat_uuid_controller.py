@@ -16,12 +16,14 @@ class ChatUuidController(BaseController):
     def get(self, request: HttpRequest, chatUuid: str):
         print('ChatUuidController : ' + request.path)
         hostUuid = 'sample'
-        chat = self.__chatService.getChatByUuid(hostKey=hostUuid,
+        talkList = self.__chatService.getChatByUuid(hostKey=hostUuid,
                                                 chatUuid=chatUuid)
 
         return self._getJsonResponse({
             'isSuccess': True,
-            'chat': chat
+            'chat': {
+                'talkList': talkList
+            }
         })
 
     # def post(self, request: HttpRequest, chatUuid: str):
