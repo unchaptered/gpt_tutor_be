@@ -20,7 +20,7 @@ conf = {
 class RdsProvider():
 
     @contextmanager
-    def get_connection(self) -> Generator[MySQLConnection, None, None]:
+    def getConnection(self) -> Generator[MySQLConnection, None, None]:
         connection: MySQLConnection = connect(**conf)  # type: ignore
 
         try:

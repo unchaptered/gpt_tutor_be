@@ -9,6 +9,11 @@ from api.v1.chats.repository.chat_repository import ChatRepository
 
 class ChatService(BaseService):
 
+    __uuidProvider: UuidProvider
+    __dateProvider: DateProvider
+
+    __chatRepository: ChatRepository
+
     def __init__(self) -> None:
         super().__init__()
 
@@ -21,7 +26,7 @@ class ChatService(BaseService):
 
     def getAllChats(self, hostKey: str):
 
-        with self._rdsProvider.get_connection() as conn:
+        with self._rdsProvider.getConnection() as conn:
             cursor = conn.cursor(dictionary=True)
 
             chats = self.__chatRepository.getAllChats(cursor, hostKey)
@@ -33,7 +38,7 @@ class ChatService(BaseService):
 
     def postChat(self, hostKey: str) -> str:
 
-        with self._rdsProvider.get_connection() as conn:
+        with self._rdsProvider.getConnection() as conn:
             cursor = conn.cursor(dictionary=True)
 
             chatUuid = self.__uuidProvider.getUuidV4()
@@ -47,3 +52,31 @@ class ChatService(BaseService):
             conn.commit()
 
             return chatUuid
+
+    def getChatByUuid(self, hostKey: str, chatUuid: str):
+
+        with self._rdsProvider.getConnection() as conn:
+            cursor = conn.cursor(dictionary=True)
+
+            chat = self.__chatRepository.getChatByUuid(cursor=cursor,
+                                                       hostKey=hostKey,
+                                                       chatUuid=chatUuid)
+
+            cursor.close()
+            conn.commit()
+
+            return chat
+
+    def delChatByUuid(self, hostKey: str, chatUuid: str):
+
+        with self._rdsProvider.getConnection() as conn:
+            cursor = conn.cursor(dictionary=True)
+
+            chat = self.__chatRepository.delChatByUuid(cursor=cursor,
+                                                       hostKey=hostKey,
+                                                       chatUuid=chatUuid)
+
+            cursor.close()
+            conn.commit()
+
+            return chat
