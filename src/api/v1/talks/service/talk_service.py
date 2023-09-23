@@ -9,7 +9,7 @@ from common.enums.talk.e_talk_status import ETALK_STATUS
 # from gpt.gpt_message import GptMessage, GptMessageList # (LEGACY)
 
 # aws
-from aws.sqs_provider import SqsProvider
+from aws.sqs_provider import SqsProvider, SendMessageType
 
 # modules
 from utilities.uuid_provider import UuidProvider
@@ -50,7 +50,9 @@ class TalkService(BaseService):
             
         # layers
         self.__talkRepository = TalkRepository()
-        
+    
+    # Logics
+    
     def getTalk(self,
                 chatUuid: str,
                 talkUuid: str):
@@ -92,7 +94,64 @@ class TalkService(BaseService):
             
             cursor.close()
             conn.commit()
+            
+            return talkUuid
 
+    # for APScheudler/GPT
+    
+    def getTalkMetaDataForGPT(self,
+                      sendMessage: SendMessageType):
+
+        with self._rdsProvider.getConnection() as conn:
+            cursor = conn.cursor(dictionary=True)
+            talkData = self.__talkRepository.getTalkMetaDataForGPT(cursor=cursor,
+                                                        sendMessage=sendMessage)
+            
+            cursor.close()
+            conn.commit()
+            
+            return talkData
+    
+    def patchTalkStatusForGPT(self,
+                      sendMessage: SendMessageType,
+                      TALK_STATUS: ETALK_STATUS):
+
+        with self._rdsProvider.getConnection() as conn:
+            cursor = conn.cursor(dictionary=True)
+            
+            updatedAt = self.__dateProvider.getCurrDatetimeStr()
+            talkData = self.__talkRepository.patchTalkStatus(cursor=cursor,
+                                                        chatUuid=sendMessage['chatUuid'],
+                                                        talkUuid=sendMessage['talkUuid'],
+                                                        updatedAt=updatedAt,
+                                                        TALK_STATUS=TALK_STATUS)
+            
+            cursor.close()
+            conn.commit()
+            
+            return talkData
+        
+    def patchTalkAnswerForGPT(self,
+                      sendMessage: SendMessageType,
+                      asnwer: str):
+
+        with self._rdsProvider.getConnection() as conn:
+            cursor = conn.cursor(dictionary=True)
+            
+            answeredAt = self.__dateProvider.getCurrDatetimeStr()
+            talkData = self.__talkRepository.patchTalkAsnwer(cursor=cursor,
+                                                        chatUuid=sendMessage['chatUuid'],
+                                                        talkUuid=sendMessage['talkUuid'],
+                                                        answer=asnwer,
+                                                        answeredAt=answeredAt,
+                                                        TALK_STATUS=ETALK_STATUS.SUCCESS_GPT)
+            
+            cursor.close()
+            conn.commit()
+            
+            return talkData
+    
+    
     # def sendQuestion(self, chatUuid: str, context: str): # (LEGACY)
 
     #     gptList = GptMessageList()

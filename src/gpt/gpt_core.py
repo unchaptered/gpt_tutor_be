@@ -1,4 +1,5 @@
 from typing import Literal, List
+import re
 import tiktoken
 import openai
 import requests
@@ -10,6 +11,7 @@ from enum import Enum
 from common.enums.gpt.e_gpt_role import EGPT_ROLE
 from common.enums.gpt.e_gpt_instrucments import EGPT_INSTURMENTS
 from common.types.gpt.gpt_completion_type import GptCompletionResponseType
+from common.enums.talk.e_talk_status import ETALK_STATUS
 
 # aws
 from aws.sqs_provider import SqsProvider
@@ -44,8 +46,85 @@ class GptCore():
         if message is None:
             return print('현재 질문 대상이 존재하지 않습니다.')
         
-        print(message['body'])
-
+        sendMessage = message['body']
+        print(sendMessage)
+        
+        try:
+            
+            # RECEIVED_FROM_QUEUE(UNUSED!!!) # (LEGACY)
+            chatData = self.__chatService.getChatMetaDataForGPT(sendMessage)
+            talkData = self.__talkService.getTalkMetaDataForGPT(sendMessage)
+            
+            # Conditional Actions
+            isEndedChat = chatData['isEnded'] == 1
+            isProblemSolvedChat = chatData['isProblemSolved'] == 1
+            isAnsweredTalk = talkData['isAnswered'] == 1
+            bannedTalkStatusList: List[str] = [
+                ETALK_STATUS.BE_CANCEL.value,
+                ETALK_STATUS.NON_PEDING.value,
+                ETALK_STATUS.OVER_PENDING.value,
+                
+                ETALK_STATUS.CALL_GPT.value,
+                ETALK_STATUS.SUCCESS_GPT.value,
+                ETALK_STATUS.FAILURE_GPT.value
+            ]
+            isBannedTalkStatus = talkData['talkStatus'] in bannedTalkStatusList
+            
+            print(chatData)
+            print(talkData)
+            
+            print('isEndedChat : ', isEndedChat)
+            print('isProblemSolvedChat : ', isProblemSolvedChat)
+            print('isAnsweredTalk : ', isAnsweredTalk)
+            print('isBannedTalkStatus : ', isBannedTalkStatus)
+            
+            if (isEndedChat
+                or isProblemSolvedChat
+                or isAnsweredTalk
+                or isBannedTalkStatus):
+                raise ValueError('Conditional Actions Validation Failed : invalid gpt target')
+            
+            self.__talkService.patchTalkStatusForGPT(sendMessage=sendMessage,
+                                                     TALK_STATUS=ETALK_STATUS.CALL_GPT)
+            try:
+                
+                category = chatData['category']
+                allowedList: List[str] = [ 'JAVA', 'JAVASCRIPT', 'KOTLIN', 'REACT', 'NEXT_JS', 'NODE_JS', 'NEST_JS', 'SPRING', 'CS' ]
+                
+                GPT_INSTURMENTS: EGPT_INSTURMENTS
+                if category in allowedList:
+                    GPT_INSTURMENTS = EGPT_INSTURMENTS[category]
+                else:
+                    GPT_INSTURMENTS = EGPT_INSTURMENTS.ETC
+                    
+                gptMessageList = GptMessageList()
+                gptMessageList.appendGptInstrucments(GPT_INSTURMENTS)
+                gptMessageList.appendGptMessage(GptMessage(
+                    role=EGPT_ROLE.USER,
+                    content=talkData['talkContext']
+                ))
+                gptResponse = self.completion(gptMessageList)
+                gptAnswer = self.__convertGptChociesToStr(gptResponse)
+                print(gptAnswer)
+                print(type(gptAnswer))
+                
+                self.__talkService.patchTalkAnswerForGPT(sendMessage=sendMessage,
+                                                        asnwer=gptAnswer)
+            except Exception as e:
+                print('112 line')
+                print(e)
+                self.__talkService.patchTalkStatusForGPT(sendMessage=sendMessage,
+                                                        TALK_STATUS=ETALK_STATUS.FAILURE_GPT)
+                # self.__sqsProvider.delMessage(message['receiptHandle'])
+                
+        except Exception as e:
+            print('119 line')
+            print(e)
+            # self.__sqsProvider.delMessage(message['receiptHandle'])
+            
+        finally:
+            self.__sqsProvider.delMessage(message['receiptHandle'])
+            
     def completion(
         self,
         msgList: GptMessageList
@@ -55,7 +134,7 @@ class GptCore():
             messages=msgList.getCvtedGptFormat(),
             temperature=0
         )  # type: ignore
-
+        
         return response
 
     def isValidMsg(
@@ -139,6 +218,19 @@ class GptCore():
             num_tokens_from_messages() is not presently implemented for model {model}.
             See https://github.com/openai/openai-python/blob/main/chatml.md for information on how messages are converted to tokens.
         """)
+
+    def __convertUnicodeToStr(self, match):
+        return chr(int(match.group(1), 16))
+    
+    def __convertGptChociesToStr(self,
+                                 response: GptCompletionResponseType):
+        validStrList = []
+        for choice in response['choices']:
+            unicodeEscape = choice['message']['content']
+            validStr = re.sub(r'\\u([a-fA-F0-9]{4})', self.__convertUnicodeToStr, unicodeEscape)
+            validStrList.append(validStr)
+        
+        return '\n'.join(validStrList)
 
 
 if __name__ == '__main__':

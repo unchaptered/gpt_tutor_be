@@ -47,10 +47,10 @@ class SqsProvider():
     def getMessage(self,
                    groupId: Literal['sampleGroup']) -> Optional[ReceiveMessageType]:
         
-        _3_SECONDS = 3
+        _2_MINUES = 120
         response = self.__sqsClient.receive_message(QueueUrl=self.__sqsUrl,
                                          MaxNumberOfMessages=1,
-                                         VisibilityTimeout=_3_SECONDS)
+                                         VisibilityTimeout=_2_MINUES)
         responseMetaData = response['ResponseMetadata']
         isSuccessResponse = responseMetaData['HTTPStatusCode'] == 200
         if not isSuccessResponse:
@@ -66,6 +66,13 @@ class SqsProvider():
             return None
         
         return self.__convertMessage(messageTypeDef=messageList[0])
+    
+    def delMessage(self, receiptHandle: str):
+        response = self.__sqsClient.delete_message(
+            QueueUrl=self.__sqsUrl,
+            ReceiptHandle=receiptHandle
+        )
+        print(response)
     
     def __convertSendMessageType(self,
                                 body: str) -> SendMessageType:

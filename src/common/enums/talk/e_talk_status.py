@@ -43,5 +43,5 @@ class ETALK_STATUS(Enum):
     """APScheduler에서 GPT 호출함"""
     SUCCESS_GPT = 'SUCCESS_GPT'
     """APScheduler에서 GPT 호출 결과가 성공함"""
-    FAILRUE_GPT = 'FAILRUE_GPT'
+    FAILURE_GPT = 'FAILURE_GPT'
     """APScheduler에서 GPT 호출 결과가 실패함"""

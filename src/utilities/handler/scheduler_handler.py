@@ -13,7 +13,7 @@ class SchHandler():
         if self.isInitialLoading:
             return
         
-        SCHEDULER_TERM = 5
+        SCHEDULER_TERM = 15
 
         self.backScheduler = BackgroundScheduler({
             'apscheduler.job_defaults.max_instances': 1

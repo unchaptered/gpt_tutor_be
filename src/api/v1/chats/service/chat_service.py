@@ -1,6 +1,9 @@
+from aws.sqs_provider import SendMessageType
+
 # modules
 from utilities.uuid_provider import UuidProvider
 from utilities.date_provider import DateProvider
+
 
 # layers
 from api.v1.base.base_service import BaseService
@@ -23,6 +26,8 @@ class ChatService(BaseService):
 
         # layers
         self.__chatRepository = ChatRepository()
+        
+    # for layers
 
     def getAllChats(self, hostKey: str):
 
@@ -36,7 +41,7 @@ class ChatService(BaseService):
 
             return chats
 
-    def postChat(self, hostKey: str) -> str:
+    def postChat(self, hostKey: str, category: str) -> str:
 
         with self._rdsProvider.getConnection() as conn:
             cursor = conn.cursor(dictionary=True)
@@ -46,6 +51,7 @@ class ChatService(BaseService):
             self.__chatRepository.postChats(cursor=cursor,
                                             hostKey=hostKey,
                                             chatUuid=chatUuid,
+                                            category=category,
                                             currDatetime=currDatetime)
 
             cursor.close()
@@ -80,3 +86,17 @@ class ChatService(BaseService):
             conn.commit()
 
             return chat
+
+    # for APScheudler/GPT
+    
+    def getChatMetaDataForGPT(self,
+                      sendMessage: SendMessageType):
+
+        with self._rdsProvider.getConnection() as conn:
+            cursor = conn.cursor(dictionary=True)
+            chatData = self.__chatRepository.getChatMetaDataForGPT(cursor=cursor,
+                                                        sendMessage=sendMessage)
+            
+            cursor.close()
+            conn.commit()
+            return chatData

@@ -32,14 +32,16 @@ class TalkController(BaseController):
         body = self._getRequestBody(request.body)
         chatUuid = body['chatUuid']
         context = body['context']
-        
-        self.__talkService.postTalk(chatUuid=chatUuid,
+        talkUuid = self.__talkService.postTalk(chatUuid=chatUuid,
                                                 context=context)
         # gptAnswer = self.__talkService.sendQuestion(chatUuid=chatUuid,
         #                                             context=context)
 
         return self._getJsonResponse({
-            'isSuccess': True
+            'isSuccess': True,
+            'talk': {
+                'talkUuid': talkUuid
+            }
         })
 
     def patch(self, request: HttpRequest):
